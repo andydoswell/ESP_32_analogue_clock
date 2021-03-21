@@ -13,8 +13,8 @@
 */
 #include <WiFi.h>
 #include "time.h"
-const char* ssid       = "YOUR_SSID"; // change these details to your wifi details
-const char* password   = "YOUR_WIFI_PASSWORD";
+const char* ssid       = "your ssid"; // change these details to your wifi details
+const char* password   = "your password";
 const char* ntpServer = "pool.ntp.org"; // address of NTP server
 const long  gmtOffset_sec = 0; // change this to alter the time to your local
 const int   daylightOffset_sec = 3600;
@@ -30,8 +30,10 @@ int minsAsSecs;
 int hoursAsMins;
 unsigned long getNTPTimer = random (720, 1440);
 int oldMins;
+int oldSecs;
 boolean failFlag = true;
 boolean PM;
+boolean tick;
 // use first 8 channels of 16 channels
 #define LEDC_CHANNEL_0     0
 #define LEDC_CHANNEL_1     1
@@ -45,7 +47,8 @@ boolean PM;
 // "LED" pins defined to use LEDC for PWM to drive meter movements
 #define LED_PIN_0      23
 #define LED_PIN_1      22
-#define PM_pin         15 //AM/PM pin
+#define PM_pin         18   //AM/PM pin
+#define TICK_PIN       15   // output to relay
 
 void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
   // calculate duty, 8191 from 2 ^ 13 - 1
@@ -64,8 +67,10 @@ void setup() {
   while (failFlag) { //if the time isn't set , set it via NTP
     getNTP ();
     extractLocalTime ();
+    oldSecs = extractSec;
   }
   pinMode(PM_pin, OUTPUT);
+  pinMode(TICK_PIN, OUTPUT);
   ledcAnalogWrite(0, 255); //set both channels to 255 to allow FSD calibration on meters.
   ledcAnalogWrite(1, 255);
   delay (10000);
@@ -133,7 +138,7 @@ void extractLocalTime() {
 }
 
 void updateClockDisplay () {
-  minsAsSecs = extractSec + (extractMin * 60); // this section calulates minutes 
+  minsAsSecs = extractSec + (extractMin * 60); // this section calulates minutes
   displayMin = map (minsAsSecs, 0, 3599, 0, 255); // and maps them to an 8-bit PWM value
   hoursAsMins = extractMin + (extractHour * 60); // this calculates the hours from the minutes value
   displayHour = map(hoursAsMins, 0, 719, 0, 255); // and maps that to an 8-bit pwm value
@@ -212,4 +217,11 @@ void loop() {
   else {
     getNTP();
   }
+
+  if (oldSecs != extractSec) {
+    tick = !tick;
+    digitalWrite (TICK_PIN, tick);
+    oldSecs = extractSec;
+  }
+
 }
