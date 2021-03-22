@@ -17,7 +17,7 @@ const char* ssid       = "your ssid"; // change these details to your wifi detai
 const char* password   = "your password";
 const char* ntpServer = "pool.ntp.org"; // address of NTP server
 const long  gmtOffset_sec = 0; // change this to alter the time to your local
-const int   daylightOffset_sec = 3600;
+const int   daylightOffset_sec = 0;
 byte extractDay;
 byte extractMonth;
 int extractYear;
