@@ -1,20 +1,15 @@
 /*
     Another stupid clock project II, The ESP 32 sequal.
     (c) A.G.Doswell 2021
-
-    NTP referenced ESP32 RTC clock, driving 2 analogue moving coil meters, set up to read hours & minutes in 12 hour formate
-
+    NTP referenced ESP32 RTC clock, driving 2 analogue moving coil meters, set up to read hours & minutes in 12 hour format
     See http://www.andydoz.blogspot.com/
     for more information and the circuit diagram.
-
     Uncomment sections to enable serial output/debugging.
-
-
 */
 #include <WiFi.h>
 #include "time.h"
-const char* ssid       = "your ssid"; // change these details to your wifi details
-const char* password   = "your password";
+const char* ssid       = "Your SSID"; // change these details to your wifi details
+const char* password   = "Your Pa$$W0rD";
 const char* ntpServer = "pool.ntp.org"; // address of NTP server
 const long  gmtOffset_sec = 0; // change this to alter the time to your local
 const int   daylightOffset_sec = 0;
@@ -34,7 +29,7 @@ int oldSecs;
 boolean failFlag = true;
 boolean PM;
 boolean tick;
-// use first 8 channels of 16 channels
+// use first 2 channels of 16 channels
 #define LEDC_CHANNEL_0     0
 #define LEDC_CHANNEL_1     1
 
@@ -95,8 +90,8 @@ void getNTP () {
   WiFi.mode(WIFI_OFF);
 }
 
-/*void printLocalTime() //uncomment to enable serial output/debugging.
-  {
+void printLocalTime() //prints serial debugging info
+{
   Serial.printf("Mins to next NTP update:");
   Serial.print(getNTPTimer);
   Serial.printf(" ");
@@ -111,15 +106,15 @@ void getNTP () {
   Serial.print(extractMonth);
   Serial.printf("/");
   Serial.print(extractYear);
-  Serial.printf(" Hours Pos:");
+  Serial.printf(" Position Hours:");
   Serial.print(hoursAsMins);
-  Serial.printf(" Mins Pos:");
+  Serial.printf(" Mins:");
   Serial.print(minsAsSecs);
   Serial.printf(" PWM Hours:");
   Serial.print(displayHour);
   Serial.printf(" Mins:");
   Serial.println(displayMin);
-  }*/
+}
 
 void extractLocalTime() {
   struct tm timeinfo;
@@ -191,7 +186,7 @@ void loop() {
   if (!failFlag) {
     if (isBST()) {
       extractHour ++;
-      if (extractHour > 12) {
+      if (extractHour > 23) {
         extractHour = 0;
       }
     }
@@ -211,8 +206,7 @@ void loop() {
       getNTPTimer = random(720, 1440);
     }
     updateClockDisplay();
-    /*  printLocalTime (); //uncomment this to enable serial output & debugging
-      delay (1000); */
+
   }
   else {
     getNTP();
@@ -221,6 +215,7 @@ void loop() {
   if (oldSecs != extractSec) {
     tick = !tick;
     digitalWrite (TICK_PIN, tick);
+    printLocalTime (); //uncomment this to enable serial output & debugging
     oldSecs = extractSec;
   }
 
